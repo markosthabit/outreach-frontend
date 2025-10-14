@@ -21,13 +21,13 @@ export function LoginForm({
           <form className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
+                <h1 className="text-2xl font-bold">سلام ونعمة</h1>
                 <p className="text-muted-foreground text-balance">
-                  Login to your Taste & See account
+                  سجل الدخول لحسابك
                 </p>
               </div>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">الإيميل</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -37,22 +37,21 @@ export function LoginForm({
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password"> كلمة السر</FieldLabel>
                   <a
                     href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
+                    className="mr-auto text-sm underline-offset-2 hover:underline">
+                    نسيت كلمة السر؟
                   </a>
                 </div>
                 <Input id="password" type="password" required />
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit">تسجيل الدخول</Button>
               </Field>
             </FieldGroup>
           </form>
-          <div className="bg-muted relative hidden md:block">
+          <div className=" relative hidden md:block">
             <img
               src="/logo.png"
               alt="Image"
@@ -61,10 +60,6 @@ export function LoginForm({
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
     </div>
   )
 }
