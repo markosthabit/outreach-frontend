@@ -54,13 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = async (): Promise<string | null> => {
     try {
+      console.log("Attempting refresh...");
       const res = await fetch(`${API}/auth/refresh`, { method: 'POST', credentials: 'include' });
+      console.log("Refresh response:", res.status);
       if (!res.ok) { setAccessToken(null); setUser(null); return null; }
       const { accessToken: newToken } = await res.json();
+      console.log("Refresh response:", res.status);
       setAccessToken(newToken);
       setUser(jwtDecode<User>(newToken));
       return newToken;
     } catch (err) {
+          console.error("Refresh error:", err);
+
       setAccessToken(null);
       setUser(null);
       return null;
