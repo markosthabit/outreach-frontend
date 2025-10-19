@@ -41,30 +41,21 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "الداشبورد",
       url: "#",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "الخدام",
       url: "#",
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
+      title: "المخدومين",
       url: "#",
       icon: IconChartBar,
     },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
+
   ],
   navClouds: [
     {
@@ -116,37 +107,30 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Settings",
+      title: "الإعدادات",
       url: "#",
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
+      title: "البحث",
       url: "#",
       icon: IconSearch,
     },
   ],
   documents: [
-    {
-      name: "Data Library",
+
+      {
+      name: "الخلوات",
       url: "#",
-      icon: IconDatabase,
+      icon: IconFolder,
     },
     {
-      name: "Reports",
+      name: "الملاحظات",
       url: "#",
       icon: IconReport,
     },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
+      
+
   ],
 }
 

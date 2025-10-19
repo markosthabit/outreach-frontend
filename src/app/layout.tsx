@@ -4,6 +4,7 @@ const cairo = Cairo({ subsets: ['arabic'], weight: ['400', '700'] });
 
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 
 export const metadata: Metadata = {
@@ -20,7 +21,14 @@ export default function RootLayout({
     <html lang="en" dir="rtl" suppressHydrationWarning>
       <body className={cairo.className}>
         <AuthProvider>
-        {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            </ThemeProvider>
         </AuthProvider>
 
       </body>
