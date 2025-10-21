@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import {
   IconCreditCard,
   IconDotsVertical,
@@ -7,7 +8,6 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
-
 import {
   Avatar,
   AvatarFallback,
@@ -29,16 +29,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export function NavUser({ user }: { user: { name: string; email: string; avatar: string } }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
 
   return (
     <SidebarMenu>
@@ -98,7 +91,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/logout")}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

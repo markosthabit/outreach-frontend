@@ -13,10 +13,10 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <section>
         <h1 className="text-3xl font-semibold tracking-tight">
-          Welcome back 👋
+          سلام ونعمة 👋
         </h1>
         <p className="text-muted-foreground mt-1">
-          Here’s a quick overview of your service activity.
+          نظرة سريعة على نشاط الخدمة
         </p>
       </section>
 
@@ -27,12 +27,12 @@ export default function DashboardPage() {
           onClick={() => router.push('/servantees')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Servantees</CardTitle>
+            <CardTitle className="text-sm font-medium">المخدومين</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">Active members</p>
+            <p className="text-xs text-muted-foreground">مخدوم نشط</p>
           </CardContent>
         </Card>
 
@@ -41,12 +41,12 @@ export default function DashboardPage() {
           onClick={() => router.push('/retreats')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Retreats</CardTitle>
+            <CardTitle className="text-sm font-medium">الخلوات</CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Upcoming retreats</p>
+            <p className="text-xs text-muted-foreground">خلوات قادمة</p>
           </CardContent>
         </Card>
 
@@ -55,12 +55,12 @@ export default function DashboardPage() {
           onClick={() => router.push('/notes')}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notes</CardTitle>
+            <CardTitle className="text-sm font-medium">ملاحظات</CardTitle>
             <Notebook className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">58</div>
-            <p className="text-xs text-muted-foreground">Saved reflections</p>
+            <p className="text-xs text-muted-foreground">ملاحظات مسجلة</p>
           </CardContent>
         </Card>
       </section>
