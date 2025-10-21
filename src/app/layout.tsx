@@ -5,7 +5,7 @@ const cairo = Cairo({ subsets: ['arabic'], weight: ['400', '700'] });
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
-
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "ذوقوا وإنظروا",
@@ -28,6 +28,8 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+                <Toaster richColors position="top-center" />
+
             </ThemeProvider>
         </AuthProvider>
 

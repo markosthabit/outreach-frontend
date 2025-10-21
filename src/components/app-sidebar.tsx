@@ -42,7 +42,7 @@ const data = {
   navMain: [
     {
       title: "الداشبورد",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
@@ -52,7 +52,7 @@ const data = {
     },
     {
       title: "المخدومين",
-      url: "#",
+      url: "/dashboard/servantees",
       icon: IconChartBar,
     },
 
@@ -146,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">ذوقوا وإنظروا</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

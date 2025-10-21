@@ -70,11 +70,27 @@ export async function apiFetch<T>(
     res = await doFetch();
   }
 
-  // ----- Handle other errors -----
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
+ // ----- Handle other errors -----
+if (!res.ok) {
+  let errorBody: any = null
+  try {
+    // Try to parse as JSON
+    errorBody = await res.json()
+  } catch {
+    // Fallback to plain text if not JSON
+    const text = await res.text()
+    errorBody = { message: text, statusCode: res.status }
   }
+
+  // Attach the status code if missing
+  if (!errorBody.statusCode) {
+    errorBody.statusCode = res.status
+  }
+
+  // Throw a structured error (not wrapped in Error())
+  throw errorBody
+}
+
 
   // ----- Success -----
   return res.json();
