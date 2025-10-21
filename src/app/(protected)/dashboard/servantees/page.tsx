@@ -54,7 +54,6 @@ export function useDebounce<T>(value: T, delay = 500) {
 
 export default function ServanteesPage() {
   const searchInputRef = useRef<HTMLInputElement>(null)
-
   const [servantees, setServantees] = useState<Servantee[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,10 +65,12 @@ export default function ServanteesPage() {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
-  // Focus the input only on initial mount
+  // Focus management - focus after search completes
   useEffect(() => {
-    searchInputRef.current?.focus()
-  }, [])
+    if (!loading && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [loading])
 
   // Fetch data when page or debouncedSearchTerm changes
   const fetchServantees = useCallback(async (pageNumber = page, search = debouncedSearchTerm) => {
@@ -112,7 +113,18 @@ export default function ServanteesPage() {
     }
   }
 
-  if (loading) return <p className="p-4">جاري التحميل...</p>
+  // Handle search input change without causing full re-render
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }
+
+  // Handle search form submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // The search is already handled by the useEffect with debouncedSearchTerm
+  }
+
+  if (loading && servantees.length === 0) return <p className="p-4">جاري التحميل...</p>
   if (error) return <p className="p-4 text-red-500">{error}</p>
 
   return (
@@ -123,22 +135,29 @@ export default function ServanteesPage() {
         <AddServanteeDialog onAdded={() => fetchServantees(1, debouncedSearchTerm)} />
       </div>
 
-      {/* Search */}
-      <div className="flex gap-3 sm:w-1/2">
+      {/* Search - Prevent default form behavior */}
+      <form onSubmit={handleSearchSubmit} className="flex gap-3 sm:w-1/2">
         <Input
-        type="search"  
           ref={searchInputRef}
           placeholder="🔍 ابحث بالاسم أو التليفون أو الكنيسة..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
+          type="text"
         />
-      </div>
+      </form>
+
+      {/* Loading state without replacing entire table */}
+      {loading && servantees.length > 0 && (
+        <div className="flex justify-center py-4">
+          <p>جاري التحميل...</p>
+        </div>
+      )}
 
       {/* Table */}
       <Card className="p-4 shadow-sm overflow-x-auto">
         <Table className="min-w-full text-right border-collapse">
           <TableCaption>
-            {servantees.length === 0
+            {servantees.length === 0 && !loading
               ? 'لا يوجد مخدومين'
               : `عدد النتائج: ${servantees.length}`}
           </TableCaption>
@@ -175,7 +194,7 @@ export default function ServanteesPage() {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">حذف</Button>
+                      <Button variant="destructive" size="sm" type="button">حذف</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent dir="rtl" className="text-right">
                       <AlertDialogHeader>
@@ -208,7 +227,7 @@ export default function ServanteesPage() {
           type='button'
           variant="outline"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
+          disabled={page === 1 || loading}
         >
           ⬅️ السابق
         </Button>
@@ -217,7 +236,7 @@ export default function ServanteesPage() {
           type='button'
           variant="outline"
           onClick={() => setPage((p) => p + 1)}
-          disabled={!hasMore}
+          disabled={!hasMore || loading}
         >
           التالي ➡️
         </Button>
