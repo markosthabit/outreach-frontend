@@ -147,7 +147,7 @@ function FocusedRetreatCard({
             {retreat.startDate ? format(new Date(retreat.startDate), 'yyyy-MM-dd') : '-'} —{' '}
             {retreat.endDate ? format(new Date(retreat.endDate), 'yyyy-MM-dd') : '-'}
           </p>
-          <p className="mt-2">{retreat.location || '-'}</p>
+          {/* <p className="mt-2">{retreat.location || '-'}</p> */}
           {retreat.notes?.length ? (
             <div className="mt-3 text-sm">
               <strong>ملاحظات:</strong>{' '}
@@ -163,8 +163,8 @@ function FocusedRetreatCard({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الإسم</TableHead>
-                <TableHead>التليفون</TableHead>
+                <TableHead className='text-right'>الإسم</TableHead>
+                <TableHead className='text-right'>التليفون</TableHead>
                 <TableHead className="w-[140px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
@@ -174,7 +174,8 @@ function FocusedRetreatCard({
                   <TableCell colSpan={3}>لا يوجد مشاركين</TableCell>
                 </TableRow>
               )}
-              {(retreat.attendees || []).map((a: any) => {
+                          {(retreat.attendees || []).map((a: any) => {
+                              console.log(a);
                 const id = typeof a === 'string' ? a : a._id
                 const name = typeof a === 'string' ? id : a.name
                 const phone = typeof a === 'string' ? '-' : a.phone
@@ -182,10 +183,13 @@ function FocusedRetreatCard({
                   <TableRow key={id}>
                     <TableCell>{name}</TableCell>
                     <TableCell>{phone || '-'}</TableCell>
-                    <TableCell className="flex justify-end">
-                      <Button size="sm" variant="destructive" onClick={() => onRemoveAttendee(id)}>
-                        ازالة
-                      </Button>
+                        <TableCell className="flex justify-end">
+                            <ConfirmDeleteDialog
+                                  onConfirm={() => onRemoveAttendee(id)}
+                                  title="حذف مخدوم"
+                                  description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم من الخلوة؟"
+                                  triggerLabel="حذف"
+                                />
                     </TableCell>
                   </TableRow>
                 )
