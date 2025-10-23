@@ -18,6 +18,8 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { AddServanteeDialog } from './add-servantee-dialog'
 import { EditServanteeDialog } from './edit-servantee-dialog'
+import { ConfirmDeleteDialog } from '@/components/shared/delete-dialog'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -192,28 +194,12 @@ export default function ServanteesPage() {
                 <TableCell className="flex gap-2 justify-end">
                   <EditServanteeDialog servantee={s} onUpdated={() => fetchServantees(page, debouncedSearchTerm)} />
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" type="button">حذف</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent dir="rtl" className="text-right">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className='text-right'>حذف مخدوم</AlertDialogTitle>
-                        <AlertDialogDescription className='text-right'>
-                          هل انت متأكد انك ترغب في حذف هذا المخدوم؟ لن يمكنك استرجاع البيانات مرة أخرى.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(s._id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          حذف
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <ConfirmDeleteDialog
+      onConfirm={() => handleDelete(s._id)}
+      title="حذف مخدوم"
+      description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم؟ لن يمكنك استرجاع البيانات مرة أخرى."
+      triggerLabel="حذف"
+    />
                 </TableCell>
               </TableRow>
             ))}
