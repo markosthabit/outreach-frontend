@@ -43,7 +43,8 @@ const retreatFields= [
   { name: 'name', label: 'اسم الخلوة', required: true },
   { name: 'startDate', label: 'تاريخ البداية', type: 'date' },
   { name: 'endDate', label: 'تاريخ النهاية', type: 'date' },
-  { name: 'notes', label: 'ملاحظات', type: 'textarea' },
+    // TODO: Notes => 
+    //   { name: 'notes', label: 'ملاحظات', type: 'textarea' },
 ]
 
 // ---------- AttendeePicker (same as before) ----------
