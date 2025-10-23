@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import NotesButton from '@/components/shared/notes-button'
 
 interface Servantee {
   _id: string
@@ -172,7 +173,6 @@ export default function ServanteesPage() {
               <TableHead className="text-right">الدراسة</TableHead>
               <TableHead className="text-right">العمل</TableHead>
               <TableHead className="text-right">تاريخ الميلاد</TableHead>
-              <TableHead className="text-right">الملاحظات</TableHead>
               <TableHead className="text-right w-[100px]">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
@@ -188,10 +188,10 @@ export default function ServanteesPage() {
                 <TableCell>
                   {s.birthDate ? format(new Date(s.birthDate), 'yyyy-MM-dd') : '-'}
                 </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  {s.notes?.length ? s.notes.join(', ') : '-'}
-                </TableCell>
+
                 <TableCell className="flex gap-2 justify-end">
+                    <NotesButton entityId={s._id} entityType="servantee" />
+
                   <EditServanteeDialog servantee={s} onUpdated={() => fetchServantees(page, debouncedSearchTerm)} />
 
                   <ConfirmDeleteDialog
