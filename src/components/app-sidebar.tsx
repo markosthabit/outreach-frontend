@@ -47,7 +47,7 @@ const data = {
     },
     {
       title: "الخدام",
-      url: "#",
+      url: "/dashboard/servants",
       icon: IconListDetails,
     },
     {
@@ -121,7 +121,7 @@ const data = {
 
       {
       name: "الخلوات",
-      url: "#",
+      url: "/dashboard/retreats",
       icon: IconFolder,
     },
     {

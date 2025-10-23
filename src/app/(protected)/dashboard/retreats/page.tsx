@@ -1,0 +1,388 @@
+'use client'
+
+import { useState, useEffect, useMemo, SetStateAction } from 'react'
+import { format } from 'date-fns'
+import {EntityDialog} from '@/components/shared/entity-dialog'
+import { ConfirmDeleteDialog } from '@/components/shared/delete-dialog'
+import { SearchBar } from '@/components/shared/search-bar'
+import { apiFetch } from '@/lib/api'
+import { Card } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
+import { Pencil } from 'lucide-react'
+
+// ---------- Types ----------
+type Servantee = {
+  _id: string
+  name: string
+  phone?: string
+}
+
+type Retreat = {
+  _id: string
+  name: string
+  startDate?: string
+  endDate?: string
+  location?: string
+  notes?: Array<{ _id?: string; content?: string }>
+  attendees?: Servantee[] | string[]
+}
+
+// ---------- Fields ----------
+const retreatFields= [
+  { name: 'name', label: 'اسم الخلوة', required: true },
+  { name: 'startDate', label: 'تاريخ البداية', type: 'date' },
+  { name: 'endDate', label: 'تاريخ النهاية', type: 'date' },
+  { name: 'notes', label: 'ملاحظات', type: 'textarea' },
+]
+
+// ---------- AttendeePicker (same as before) ----------
+function AttendeePicker({ retreatId, onAdded }: { retreatId: string; onAdded: () => void }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Servantee[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const search = async (q: string) => {
+    if (!q || q.trim().length < 1) {
+      setResults([])
+      return
+    }
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({ search: q, limit: '10' })
+      const res: any = await apiFetch(`/servantees?${params.toString()}`)
+      setResults(res.data || res)
+    } catch {
+      toast.error('حدث خطأ أثناء البحث')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addAttendee = async (servanteeId: string) => {
+    try {
+      setLoading(true)
+      const retreat: Retreat = await apiFetch(`/retreats/${retreatId}`)
+      const existing = (retreat.attendees || []).map((a: any) => (typeof a === 'string' ? a : a._id))
+      if (existing.includes(servanteeId)) {
+        toast.error('المخدوم مضاف بالفعل')
+        return
+      }
+      await apiFetch(`/retreats/${retreatId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ attendees: [...existing, servanteeId] }),
+      })
+      toast.success('تمت إضافة المخدوم')
+      onAdded()
+      setQuery('')
+      setResults([])
+    } catch {
+      toast.error('حدث خطأ أثناء الإضافة')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card className="p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder="ابحث عن مخدوم..."
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            search(e.target.value)
+          }}
+        />
+        <Button onClick={() => search(query)} disabled={loading || !query.trim()}>
+          بحث
+        </Button>
+      </div>
+
+      <div>
+        <p className="text-sm text-muted-foreground">النتائج:</p>
+        <div className="mt-2 space-y-2">
+          {results.length === 0 && <p className="text-sm text-muted-foreground">لا توجد نتائج</p>}
+          {results.map((r) => (
+            <div key={r._id} className="flex items-center justify-between border rounded p-2">
+              <div>
+                <div className="font-medium">{r.name}</div>
+                <div className="text-sm text-muted-foreground">{r.phone || '-'}</div>
+              </div>
+              <Button size="sm" onClick={() => addAttendee(r._id)} disabled={loading}>
+                إضافة
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+// ---------- FocusedRetreatCard ----------
+function FocusedRetreatCard({
+  retreat,
+  onRemoveAttendee,
+}: {
+  retreat: Retreat
+  onRemoveAttendee: (servanteeId: string) => void
+}) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">{retreat.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            {retreat.startDate ? format(new Date(retreat.startDate), 'yyyy-MM-dd') : '-'} —{' '}
+            {retreat.endDate ? format(new Date(retreat.endDate), 'yyyy-MM-dd') : '-'}
+          </p>
+          <p className="mt-2">{retreat.location || '-'}</p>
+          {retreat.notes?.length ? (
+            <div className="mt-3 text-sm">
+              <strong>ملاحظات:</strong>{' '}
+              {(retreat.notes as any[]).map((n) => n.content || n).join(' / ')}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h3 className="font-medium mb-2">المشاركين</h3>
+        <Card className="p-2">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>الإسم</TableHead>
+                <TableHead>التليفون</TableHead>
+                <TableHead className="w-[140px]">الإجراءات</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(retreat.attendees || []).length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3}>لا يوجد مشاركين</TableCell>
+                </TableRow>
+              )}
+              {(retreat.attendees || []).map((a: any) => {
+                const id = typeof a === 'string' ? a : a._id
+                const name = typeof a === 'string' ? id : a.name
+                const phone = typeof a === 'string' ? '-' : a.phone
+                return (
+                  <TableRow key={id}>
+                    <TableCell>{name}</TableCell>
+                    <TableCell>{phone || '-'}</TableCell>
+                    <TableCell className="flex justify-end">
+                      <Button size="sm" variant="destructive" onClick={() => onRemoveAttendee(id)}>
+                        ازالة
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
+    </Card>
+  )
+}
+
+// ---------- RetreatsPage (Main) ----------
+export default function RetreatsPage() {
+  // 🧭 PAGINATION
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
+  const [total, setTotal] = useState(0)
+  const [retreats, setRetreats] = useState<Retreat[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedRetreat, setSelectedRetreat] = useState<Retreat | null>(null)
+
+  const fetchRetreats = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        ...(searchTerm ? { search: searchTerm } : {}),
+      })
+      const res:any = await apiFetch(`/retreats?${params.toString()}`)
+      setRetreats(res.data || res)
+      setTotal(res.total || res.data?.length || 0)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchRetreats()
+  }, [page, searchTerm])
+
+  const totalPages = Math.ceil(total / limit)
+
+  const refreshFocused = async () => {
+    if (!selectedRetreat) return
+    const refreshed: SetStateAction<Retreat | null> = await apiFetch(`/retreats/${selectedRetreat._id}`)
+    setSelectedRetreat(refreshed)
+  }
+
+  const handleRemoveAttendee = async (servanteeId: string) => {
+    if (!selectedRetreat) return
+    const existing = (selectedRetreat.attendees || []).map((a: any) =>
+      typeof a === 'string' ? a : a._id
+    )
+    await apiFetch(`/retreats/${selectedRetreat._id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ attendees: existing.filter((id) => id !== servanteeId) }),
+    })
+    toast.success('تم حذف المخدوم من الخلوة')
+    await refreshFocused()
+    fetchRetreats()
+  }
+
+  return (
+    <div className="p-6 space-y-6" dir="rtl">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">الخلوات</h1>
+        <EntityDialog
+          title="إضافة خلوة جديدة"
+          endpoint="retreats"
+          fields={retreatFields}
+          mode="create"
+          onSuccess={fetchRetreats}
+        />
+      </div>
+
+      <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="ابحث عن خلوة..." />
+
+   <Card className="p-4 shadow-sm overflow-x-auto">
+  <Table className="w-full border-separate border-spacing-0 text-right">
+    <TableCaption className="text-sm text-muted-foreground">
+      {retreats.length === 0 && !loading
+        ? 'لا يوجد خلوات'
+        : `الصفحة ${page} من ${totalPages}`}
+    </TableCaption>
+
+    <TableHeader>
+      <TableRow className="bg-muted/50 text-right">
+        <TableHead className="text-right font-semibold">الاسم</TableHead>
+        <TableHead className="text-right font-semibold">البداية</TableHead>
+        <TableHead className="text-right font-semibold">النهاية</TableHead>
+        <TableHead className="text-right font-semibold">المشاركين</TableHead>
+        <TableHead className="text-right font-semibold w-[140px]">الإجراءات</TableHead>
+      </TableRow>
+    </TableHeader>
+
+    <TableBody>
+      {retreats.map((r) => (
+        <TableRow
+          key={r._id}
+          onClick={() => setSelectedRetreat(r)}
+          className={`cursor-pointer transition-colors ${
+            selectedRetreat?._id === r._id ? 'bg-muted/30' : 'hover:bg-muted/10'
+          }`}
+        >
+          <TableCell className="py-3">{r.name}</TableCell>
+          <TableCell className="py-3">
+            {r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : '-'}
+          </TableCell>
+          <TableCell className="py-3">
+            {r.endDate ? format(new Date(r.endDate), 'yyyy-MM-dd') : '-'}
+          </TableCell>
+          <TableCell className="py-3">
+            {(r.attendees && (r.attendees as any[]).length) || 0}
+          </TableCell>
+          <TableCell className="py-3">
+            <div className="flex items-center justify-end gap-2">
+              <EntityDialog
+                title="تعديل خلوة"
+                endpoint="retreats"
+                fields={retreatFields}
+                mode="edit"
+                initialData={r}
+                onSuccess={fetchRetreats}
+                trigger={
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                }
+              />
+
+              <ConfirmDeleteDialog
+                onConfirm={() => {
+                  fetchRetreats()
+                  if (selectedRetreat?._id === r._id) setSelectedRetreat(null)
+                          }}
+                
+              />
+            </div>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</Card>
+
+
+      {/* 🧭 PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            السابق
+          </Button>
+          <span className="px-2 py-1 text-sm">
+            الصفحة {page} من {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            التالي
+          </Button>
+        </div>
+      )}
+
+      {selectedRetreat && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <FocusedRetreatCard
+            retreat={selectedRetreat}
+            onRemoveAttendee={handleRemoveAttendee}
+          />
+          <div className="space-y-4">
+            <AttendeePicker
+              retreatId={selectedRetreat._id}
+              onAdded={async () => {
+                await refreshFocused()
+                fetchRetreats()
+              }}
+            />
+            <div className="flex gap-2">
+              <Button onClick={() => refreshFocused()}>تحديث</Button>
+              <Button variant="outline" onClick={() => setSelectedRetreat(null)}>
+                إلغاء التحديد
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

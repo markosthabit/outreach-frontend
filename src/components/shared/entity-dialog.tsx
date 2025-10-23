@@ -1,110 +1,115 @@
 'use client'
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
 import { apiFetch } from '@/lib/api'
-
-export interface EntityField {
-  name: string
-  label: string
-  type?: 'text' | 'textarea' | 'number' | 'date'
-  placeholder?: string
-  required?: boolean
-}
-
-interface EntityDialogProps {
-  title: string
-  endpoint: string
-  fields: EntityField[]
-  mode: 'add' | 'edit'
-  initialData?: Record<string, any>
-  onSuccess?: () => void
-  trigger?: React.ReactNode
-}
+import { toast } from 'sonner'
 
 export function EntityDialog({
   title,
   endpoint,
   fields,
   mode,
-  initialData = {},
+  initialData,
   onSuccess,
-  trigger
-}: EntityDialogProps) {
+  trigger,
+}: {
+  title: string
+  endpoint: string
+  fields: { name: string; label: string; type?: string }[]
+  mode: 'create' | 'edit'
+  initialData?: any
+  onSuccess?: () => void
+  trigger?: React.ReactNode
+}) {
   const [open, setOpen] = useState(false)
-  const [formData, setFormData] = useState(initialData)
-  const [loading, setLoading] = useState(false)
+  const { register, handleSubmit, reset } = useForm()
 
-  const handleChange = (name: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  // ✅ Reset form when dialog opens or initialData changes
+  useEffect(() => {
+    if (open) {
+      // convert ISO date strings to yyyy-MM-dd before resetting
+      const prefilled = { ...initialData }
+      fields.forEach((f) => {
+        if (f.type === 'date' && prefilled?.[f.name]) {
+          prefilled[f.name] = new Date(prefilled[f.name]).toISOString().split('T')[0]
+        }
+      })
+      reset(prefilled || {})
+    }
+  }, [open, initialData, fields, reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: any) => {
     try {
-      setLoading(true)
-      if (mode === 'add') {
-        await apiFetch(`/${endpoint}`, { method: 'POST', body: formData })
-        toast.success('تمت الإضافة بنجاح ✅')
-      } else {
-        await apiFetch(`/${endpoint}/${initialData._id}`, { method: 'PUT', body: formData })
-        toast.success('تم التحديث بنجاح ✅')
-      }
+      const method = mode === 'create' ? 'POST' : 'PATCH'
+      const url = mode === 'create' ? `/${endpoint}` : `/${endpoint}/${initialData._id}`
+      // Remove backend-managed fields
+      const formattedData = { ...data }
+      delete formattedData._id
+      delete formattedData.createdAt
+      delete formattedData.updatedAt
+      delete formattedData.__v
+      // convert date strings to ISO before sending (for date inputs)
+      console.log(formattedData);
+      fields.forEach((f) => {
+        if (f.type === 'date' && formattedData[f.name]) {
+          formattedData[f.name] = new Date(formattedData[f.name]).toISOString()
+        }
+      })
+
+      await apiFetch(url, { method, body: JSON.stringify(formattedData) })
+
+      toast.success(mode === 'create' ? 'تمت الإضافة بنجاح' : 'تم التعديل بنجاح')
       setOpen(false)
       onSuccess?.()
     } catch (err: any) {
-      toast.error(err.message || 'حدث خطأ ❌')
-    } finally {
-      setLoading(false)
+      console.log(err);
+      toast.error(err.message)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button variant={mode === 'add' ? 'default' : 'outline'}>
-            {mode === 'add' ? '➕ إضافة' : '✏️ تعديل'}
+        {trigger ?? (
+          <Button variant={mode === 'edit' ? 'outline' : 'default'}>
+            {mode === 'edit' ? 'تعديل' : 'إضافة'}
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent dir="rtl" className="max-w-md">
+
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map((f) => (
-            <div key={f.name} className="space-y-2">
-              <Label htmlFor={f.name}>{f.label}</Label>
-              {f.type === 'textarea' ? (
-                <Textarea
-                  id={f.name}
-                  placeholder={f.placeholder}
-                  required={f.required}
-                  value={formData[f.name] || ''}
-                  onChange={(e) => handleChange(f.name, e.target.value)}
-                />
-              ) : (
-                <Input
-                  id={f.name}
-                  type={f.type || 'text'}
-                  placeholder={f.placeholder}
-                  required={f.required}
-                  value={formData[f.name] || ''}
-                  onChange={(e) => handleChange(f.name, e.target.value)}
-                />
-              )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {fields.map((field) => (
+            <div key={field.name}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                type={field.type || 'text'}
+                defaultValue={
+                  field.type === 'date' && initialData?.[field.name]
+                    ? new Date(initialData[field.name]).toISOString().split('T')[0]
+                    : initialData?.[field.name] ?? ''
+                }
+                {...register(field.name)}
+              />
             </div>
           ))}
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading}>
-              {loading ? 'جاري الحفظ...' : mode === 'add' ? 'حفظ' : 'تحديث'}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+              إلغاء
+            </Button>
+            <Button type="submit">
+              {mode === 'create' ? 'إضافة' : 'حفظ التعديلات'}
             </Button>
           </div>
         </form>
