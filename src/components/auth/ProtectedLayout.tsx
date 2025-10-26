@@ -10,8 +10,6 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   const { user, refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  console.log("ProtectedLayout mounted");
-  console.log("User:", user);
   useEffect(() => {
     const verify = async () => {
       try {

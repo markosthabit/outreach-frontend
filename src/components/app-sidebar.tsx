@@ -55,6 +55,11 @@ const data = {
       url: "/dashboard/servantees",
       icon: IconChartBar,
     },
+    {
+      title: "الخلوات",
+      url: "/dashboard/retreats",
+  icon: IconFolder,
+    },
 
   ],
   navClouds: [
@@ -117,21 +122,10 @@ const data = {
       icon: IconSearch,
     },
   ],
-  documents: [
 
-      {
-      name: "الخلوات",
-      url: "/dashboard/retreats",
-      icon: IconFolder,
-    },
-    {
-      name: "الملاحظات",
-      url: "#",
-      icon: IconReport,
-    },
       
 
-  ],
+
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -154,8 +148,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

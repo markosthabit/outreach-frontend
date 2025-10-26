@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-type User = { sub: string; email: string; roles?: string[] };
+type User = { sub: string; email: string; role: string };
 type AuthContextType = {
   user: User | null;
   accessToken: string | null;
