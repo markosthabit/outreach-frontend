@@ -64,6 +64,7 @@ export default function ServanteesPage() {
   const [limit] = useState(10)
   const [hasMore, setHasMore] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+const [totalResults, setTotalResults] = useState(0)
 
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
@@ -88,6 +89,8 @@ export default function ServanteesPage() {
       const data: any = await apiFetch(`/servantees?${params.toString()}`)
       setServantees(data.data || data)
       setHasMore(!data.pages || pageNumber < data.pages)
+      setTotalResults(data.total || 0) 
+
     } catch (err: any) {
       console.error(err)
       setError(err.message || 'حدث خطأ أثناء تحميل البيانات')
@@ -162,7 +165,7 @@ export default function ServanteesPage() {
           <TableCaption>
             {servantees.length === 0 && !loading
               ? 'لا يوجد مخدومين'
-              : `عدد النتائج: ${servantees.length}`}
+              : `عدد النتائج: ${totalResults}`}
           </TableCaption>
 
           <TableHeader>

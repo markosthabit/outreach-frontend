@@ -11,7 +11,6 @@ import { apiFetch } from '@/lib/api'
 import { toast } from 'sonner'
 import { EntityDialog } from '@/components/shared/entity-dialog'
 import { ConfirmDeleteDialog } from '@/components/shared/delete-dialog'
-import { getUserRole } from '@/lib/getUserFromToken'
 import { useAuth } from '@/contexts/AuthContext'
 
 // 🧠 Define the fields used in the dialog (for both create & edit)
