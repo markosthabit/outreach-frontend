@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { Pencil } from 'lucide-react'
+import NotesButton from '@/components/shared/notes-button'
 
 // ---------- Types ----------
 type Servantee = {
@@ -41,9 +42,11 @@ type Retreat = {
 // ---------- Fields ----------
 const retreatFields= [
   { name: 'name', label: 'اسم الخلوة', required: true },
-  { name: 'startDate', label: 'تاريخ البداية', type: 'date' },
-  { name: 'endDate', label: 'تاريخ النهاية', type: 'date' },
-    // TODO: Notes => 
+  { name: 'location', label: 'مكان الخلوة', required: true },
+  { name: 'startDate', label: 'تاريخ البداية', type: 'date', required: true },
+  { name: 'endDate', label: 'تاريخ النهاية', type: 'date', required: true },
+
+  // TODO: Notes =>
     //   { name: 'notes', label: 'ملاحظات', type: 'textarea' },
 ]
 
@@ -148,7 +151,7 @@ function FocusedRetreatCard({
             {retreat.startDate ? format(new Date(retreat.startDate), 'yyyy-MM-dd') : '-'} —{' '}
             {retreat.endDate ? format(new Date(retreat.endDate), 'yyyy-MM-dd') : '-'}
           </p>
-          {/* <p className="mt-2">{retreat.location || '-'}</p> */}
+          <p className="mt-2">{retreat.location || '-'}</p>
           {retreat.notes?.length ? (
             <div className="mt-3 text-sm">
               <strong>ملاحظات:</strong>{' '}
@@ -166,7 +169,7 @@ function FocusedRetreatCard({
               <TableRow>
                 <TableHead className='text-right'>الإسم</TableHead>
                 <TableHead className='text-right'>التليفون</TableHead>
-                <TableHead className="w-[140px]">الإجراءات</TableHead>
+                <TableHead className="text-right w-[140px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -184,13 +187,14 @@ function FocusedRetreatCard({
                   <TableRow key={id}>
                     <TableCell>{name}</TableCell>
                     <TableCell>{phone || '-'}</TableCell>
-                        <TableCell className="flex justify-end">
-                            <ConfirmDeleteDialog
-                                  onConfirm={() => onRemoveAttendee(id)}
-                                  title="حذف مخدوم"
-                                  description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم من الخلوة؟"
-                                  triggerLabel="حذف"
-                                />
+                    <TableCell className="flex gap-2 justify-end">
+                    <NotesButton entityId={id} entityType="servantee" />  
+                    <ConfirmDeleteDialog
+                          onConfirm={() => onRemoveAttendee(id)}
+                          title="حذف مخدوم"
+                          description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم من الخلوة؟"
+                          triggerLabel="حذف"
+                        />
                     </TableCell>
                   </TableRow>
                 )
@@ -284,10 +288,11 @@ export default function RetreatsPage() {
     <TableHeader>
       <TableRow className="bg-muted/50 text-right">
         <TableHead className="text-right font-semibold">الاسم</TableHead>
-        <TableHead className="text-right font-semibold">البداية</TableHead>
-        <TableHead className="text-right font-semibold">النهاية</TableHead>
-        <TableHead className="text-right font-semibold">المشاركين</TableHead>
-        <TableHead className="text-right font-semibold w-[140px]">الإجراءات</TableHead>
+          <TableHead className="text-right font-semibold">المكان</TableHead>
+          <TableHead className="text-right font-semibold">البداية</TableHead>
+          <TableHead className="text-right font-semibold">النهاية</TableHead>
+          <TableHead className="text-right font-semibold">المشاركين</TableHead>
+          <TableHead className="text-right font-semibold w-[140px]">الإجراءات</TableHead>
       </TableRow>
     </TableHeader>
 
@@ -301,6 +306,7 @@ export default function RetreatsPage() {
           }`}
         >
           <TableCell className="py-3">{r.name}</TableCell>
+                  <TableCell className="py-3">{r.location}</TableCell>
           <TableCell className="py-3">
             {r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : '-'}
           </TableCell>
@@ -325,14 +331,24 @@ export default function RetreatsPage() {
                   </Button>
                 }
               />
+                    <NotesButton entityId={r._id} entityType="retreat" />  
 
-              <ConfirmDeleteDialog
-                onConfirm={() => {
-                  fetchRetreats()
-                  if (selectedRetreat?._id === r._id) setSelectedRetreat(null)
-                          }}
-                
-              />
+         <ConfirmDeleteDialog
+  title="حذف الخلوة"
+  description={`هل أنت متأكد أنك ترغب في حذف الخلوة "${r.name}"؟`}
+  onConfirm={async () => {
+    try {
+      await apiFetch(`/retreats/${r._id}`, { method: 'DELETE' })
+      toast.success('تم حذف الخلوة بنجاح')
+      fetchRetreats()
+      if (selectedRetreat?._id === r._id) setSelectedRetreat(null)
+    } catch (err) {
+      console.error(err)
+      toast.error('حدث خطأ أثناء حذف الخلوة')
+    }
+  }}
+/>
+
             </div>
           </TableCell>
         </TableRow>
