@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { Pencil } from 'lucide-react'
 import NotesButton from '@/components/shared/notes-button'
+import GenerateMissingServantees from './generate-missing-servantees'
 
 // ---------- Types ----------
 type Servantee = {
@@ -400,6 +401,11 @@ export default function RetreatsPage() {
               <Button variant="outline" onClick={() => setSelectedRetreat(null)}>
                 إلغاء التحديد
               </Button>
+              <GenerateMissingServantees
+                retreatId={selectedRetreat._id}
+                retreatName={selectedRetreat.name}>
+
+              </GenerateMissingServantees>
             </div>
           </div>
         </div>
