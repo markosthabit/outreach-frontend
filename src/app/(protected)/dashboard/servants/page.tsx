@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 // 🧠 Define the fields used in the dialog (for both create & edit)
 const servantFields = [
+    { name: 'name', label: 'الإسم', type: 'text', required: true },
   { name: 'email', label: 'البريد الإلكتروني', type: 'email', required: true },
   { name: 'password', label: 'كلمة المرور', type: 'password', required: true },
   { name: 'role', label: 'الدور', type: 'select', options: [
@@ -94,6 +95,7 @@ export default function ServantsPage() {
 
           <TableHeader>
             <TableRow className="bg-muted/50">
+              <TableHead className='text-right'>الإسم</TableHead>
               <TableHead className='text-right'>البريد الإلكتروني</TableHead>
               <TableHead className='text-right'>الدور</TableHead>
               <TableHead className="w-[160px] text-center">الإجراءات</TableHead>
@@ -107,6 +109,7 @@ export default function ServantsPage() {
                 onClick={() => setSelectedServant(s)}
                 className={`cursor-pointer ${selectedServant?._id === s._id ? 'bg-muted/30' : ''}`}
               >
+                 <TableCell>{s.name}</TableCell>
                 <TableCell>{s.email}</TableCell>
                 <TableCell>{s.role === 'Admin' ? 'مسؤول' : 'خادم'}</TableCell>
                 <TableCell className="flex gap-2 justify-end">

@@ -27,11 +27,15 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/AuthContext"
+import { SidebarClose } from "lucide-react"
 
 const data = {
   user: {
@@ -45,11 +49,7 @@ const data = {
       url: "/dashboard",
       icon: IconDashboard,
     },
-    {
-      title: "الخدام",
-      url: "/dashboard/servants",
-      icon: IconListDetails,
-    },
+
     {
       title: "المخدومين",
       url: "/dashboard/servantees",
@@ -110,7 +110,11 @@ const data = {
       ],
     },
   ],
-  navSecondary: [
+  navSecondary: [    {
+      title: "الخدام",
+      url: "/dashboard/servants",
+      icon: IconListDetails,
+    },
     {
       title: "الإعدادات",
       url: "#",
@@ -129,6 +133,9 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const { user } = useAuth();
+      data.user.name = user?.role ?? data.user.name;
+      data.user.email = user?.email ?? data.user.email;
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -149,6 +156,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
+      <SidebarSeparator></SidebarSeparator>
+      {user?.role==="Admin"? (<SidebarContent>
+        <NavMain items={data.navSecondary} />
+      </SidebarContent>):(<></>)}
+      
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>

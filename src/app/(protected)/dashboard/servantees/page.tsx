@@ -19,19 +19,9 @@ import { toast } from 'sonner'
 import { AddServanteeDialog } from './add-servantee-dialog'
 import { EditServanteeDialog } from './edit-servantee-dialog'
 import { ConfirmDeleteDialog } from '@/components/shared/delete-dialog'
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import ServanteeDetailsDialog from './servantee-details-dialog'
 import NotesButton from '@/components/shared/notes-button'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Servantee {
   _id: string
@@ -56,6 +46,8 @@ export function useDebounce<T>(value: T, delay = 500) {
 }
 
 export default function ServanteesPage() {
+   const { user } = useAuth();
+  const isAdmin = user!.role==='Admin';
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [servantees, setServantees] = useState<Servantee[]>([])
   const [loading, setLoading] = useState(false)
@@ -173,8 +165,8 @@ const [totalResults, setTotalResults] = useState(0)
               <TableHead className="text-right">الإسم</TableHead>
               <TableHead className="text-right">التليفون</TableHead>
               <TableHead className="text-right">الكنيسة</TableHead>
-              <TableHead className="text-right">الدراسة</TableHead>
-              <TableHead className="text-right">العمل</TableHead>
+              <TableHead className="text-right">الكلية</TableHead>
+              <TableHead className="text-right">الفرقة</TableHead>
               <TableHead className="text-right">تاريخ الميلاد</TableHead>
               <TableHead className="text-right w-[100px]">الإجراءات</TableHead>
             </TableRow>
@@ -193,16 +185,16 @@ const [totalResults, setTotalResults] = useState(0)
                 </TableCell>
 
                 <TableCell className="flex gap-2 justify-end">
-                    <NotesButton entityId={s._id} entityType="servantee" />
-
-                  <EditServanteeDialog servantee={s} onUpdated={() => fetchServantees(page, debouncedSearchTerm)} />
-
-                  <ConfirmDeleteDialog
-      onConfirm={() => handleDelete(s._id)}
-      title="حذف مخدوم"
-      description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم؟ لن يمكنك استرجاع البيانات مرة أخرى."
-      triggerLabel="حذف"
-    />
+                    <ServanteeDetailsDialog servanteeId={s._id} servanteeName={s.name} />
+                  <NotesButton entityId={s._id} entityType="servantee" />
+                  {isAdmin ? (
+                    <><EditServanteeDialog servantee={s} onUpdated={() => fetchServantees(page, debouncedSearchTerm)} /><ConfirmDeleteDialog
+                      onConfirm={() => handleDelete(s._id)}
+                      title="حذف مخدوم"
+                      description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم؟ لن يمكنك استرجاع البيانات مرة أخرى."
+                      triggerLabel="حذف" /></>
+                  ) : (<></>)}
+                    
                 </TableCell>
               </TableRow>
             ))}
