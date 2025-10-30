@@ -122,7 +122,7 @@ const data = {
     },
     {
       title: "البحث",
-      url: "#",
+      url: "/dashboard/search",
       icon: IconSearch,
     },
   ],
