@@ -1,12 +1,13 @@
-'use client'
+"use client"
 
-import { Button } from '@/components/ui/button'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { toast } from 'sonner'
-import { apiFetch } from '@/lib/api'
-import { useState } from 'react'
-import { b64font } from '@/lib/fonts/amiri-font'
+import { Button } from "@/components/ui/button"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { toast } from "sonner"
+import { apiFetch } from "@/lib/api"
+import { useState } from "react"
+import { b64font } from "@/lib/fonts/amiri-font"
+import * as XLSX from "xlsx"
 
 type Props = {
   retreatId: string
@@ -14,89 +15,114 @@ type Props = {
 }
 
 export default function GenerateMissingServantees({ retreatId, retreatName }: Props) {
-  const [loading, setLoading] = useState(false)
+  const [loadingPdf, setLoadingPdf] = useState(false)
+  const [loadingExcel, setLoadingExcel] = useState(false)
 
-  const handleGenerate = async () => {
+  async function getMissingServantees() {
+    let page = 1
+    const limit = 100
+    let allServantees: any[] = []
+    let hasMore = true
+
+    while (hasMore) {
+      const data: any = await apiFetch(`/servantees?page=${page}&limit=${limit}`)
+      if (!data.data || data.data.length === 0) break
+      allServantees = [...allServantees, ...data.data]
+      hasMore = data.pages && page < data.pages
+      page++
+    }
+
+    const retreat: any = await apiFetch(`/retreats/${retreatId}`)
+    const attendeeIds = (retreat.attendees || []).map((a: any) =>
+      typeof a === "string" ? a : a._id
+    )
+
+    return allServantees.filter((s) => !attendeeIds.includes(s._id))
+  }
+
+  const handleGeneratePDF = async () => {
     try {
-      setLoading(true)
-
-      // 1️⃣ Fetch *all* servantees (not paginated)
-      let page = 1
-      const limit = 100
-      let allServantees: any[] = []
-      let hasMore = true
-
-      while (hasMore) {
-        const data: any = await apiFetch(`/servantees?page=${page}&limit=${limit}`)
-        if (!data.data || data.data.length === 0) break
-
-        allServantees = [...allServantees, ...data.data]
-        hasMore = data.pages && page < data.pages
-        page++
-      }
-
-      // 2️⃣ Fetch the selected retreat
-      const retreat: any = await apiFetch(`/retreats/${retreatId}`)
-      const attendeeIds = (retreat.attendees || []).map((a: any) =>
-        typeof a === 'string' ? a : a._id
-      )
-
-      // 3️⃣ Filter out attendees
-      const missing = allServantees.filter((s) => !attendeeIds.includes(s._id))
+      setLoadingPdf(true)
+      const missing = await getMissingServantees()
 
       if (missing.length === 0) {
-        toast.info('كل المخدومين مشاركين في الخلوة 🎉')
+        toast.info("كل المخدومين مشاركين في الخلوة 🎉")
         return
       }
 
-      // 4️⃣ Initialize PDF with Arabic font and RTL support
-      const doc = new jsPDF({ orientation: 'p', unit: 'pt' })
-      doc.addFileToVFS('Amiri-Regular.ttf', b64font)
-      doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal')
-      doc.setFont('Amiri')
-        doc.setFontSize(16)
+      const doc = new jsPDF({ orientation: "p", unit: "pt" })
+      doc.addFileToVFS("Amiri-Regular.ttf", b64font)
+      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal")
+      doc.setFont("Amiri")
+      doc.setFontSize(16)
 
-      // 5️⃣ Title (right-aligned, Arabic)
       doc.text(`قائمة المخدومين غير المشاركين في خلوة ${retreatName}`, 550, 60, {
-        align: 'right',
+        align: "right",
       })
 
-// 6️⃣ Prepare table data (3 names per row)
-const names = missing.map((s) => s.name || '-')
-const rows = []
-for (let i = 0; i < names.length; i += 3) {
-  rows.push([names[i], names[i + 1] || '', names[i + 2] || ''])
-}
+      const names = missing.map((s) => s.name || "-")
+      const rows = []
+      for (let i = 0; i < names.length; i += 3) {
+        rows.push([names[i], names[i + 1] || "", names[i + 2] || ""])
+      }
 
-      // 7️⃣ Generate Arabic table
       autoTable(doc, {
         startY: 90,
         body: rows,
         styles: {
-          font: 'Amiri',
-          fontStyle: 'normal',
-          halign: 'right',
+          font: "Amiri",
+          fontStyle: "normal",
+          halign: "right",
           textColor: [0, 0, 0],
-          cellWidth: 'wrap',
+          cellWidth: "wrap",
         },
-       
         margin: { right: 40, left: 40 },
       })
 
-      // 8️⃣ Save PDF
       doc.save(`المخدومين_غير_المشاركين_${retreatName}.pdf`)
-      toast.success('تم إنشاء ملف PDF بنجاح ✅')
-    } catch (err: any) {
+      toast.success("تم إنشاء ملف PDF بنجاح ✅")
+    } catch (err) {
       console.error(err)
-      toast.error('حدث خطأ أثناء إنشاء الملف')
+      toast.error("حدث خطأ أثناء إنشاء ملف PDF")
     } finally {
-      setLoading(false)
+      setLoadingPdf(false)
+    }
+  }
+
+  const handleGenerateExcel = async () => {
+    try {
+      setLoadingExcel(true)
+      const missing = await getMissingServantees()
+
+      if (missing.length === 0) {
+        toast.info("كل المخدومين مشاركين في الخلوة 🎉")
+        return
+      }
+
+      const data = missing.map((s) => ({ الاسم: s.name || "-" }))
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Missing")
+
+      XLSX.writeFile(workbook, `المخدومين_غير_المشاركين_${retreatName}.xlsx`)
+      toast.success("تم إنشاء ملف Excel بنجاح ✅")
+    } catch (err) {
+      console.error(err)
+      toast.error("حدث خطأ أثناء إنشاء ملف Excel")
+    } finally {
+      setLoadingExcel(false)
     }
   }
 
   return (
-    <Button onClick={handleGenerate} disabled={loading}>
-      {loading ? 'جارٍ الإنشاء...' : 'تصدير غير المشاركين PDF'}
-    </Button>
+    <div className="flex gap-2">
+      <Button onClick={handleGeneratePDF} disabled={loadingPdf}>
+        {loadingPdf ? "جارٍ إنشاء PDF..." : "تصدير غير المشاركين PDF"}
+      </Button>
+
+      <Button onClick={handleGenerateExcel} disabled={loadingExcel}>
+        {loadingExcel ? "جارٍ إنشاء Excel..." : "تصدير غير المشاركين Excel"}
+      </Button>
+    </div>
   )
 }
