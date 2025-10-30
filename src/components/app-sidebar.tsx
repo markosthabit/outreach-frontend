@@ -115,11 +115,11 @@ const data = {
       url: "/dashboard/servants",
       icon: IconListDetails,
     },
-    {
-      title: "الإعدادات",
-      url: "#",
-      icon: IconSettings,
-    },
+    // {
+    //   title: "الإعدادات",
+    //   url: "#",
+    //   icon: IconSettings,
+    // },
     {
       title: "البحث",
       url: "/dashboard/search",
@@ -157,10 +157,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarSeparator></SidebarSeparator>
-      {user?.role==="Admin"? (<SidebarContent>
+     <SidebarContent>
         <NavMain items={data.navSecondary} />
-      </SidebarContent>):(<></>)}
-      
+      </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
