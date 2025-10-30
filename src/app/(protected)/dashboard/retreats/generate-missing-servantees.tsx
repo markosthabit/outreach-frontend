@@ -61,7 +61,6 @@ export default function GenerateMissingServantees({ retreatId, retreatName }: Pr
         align: 'right',
       })
 
-      // 6️⃣ Prepare table data
 // 6️⃣ Prepare table data (3 names per row)
 const names = missing.map((s) => s.name || '-')
 const rows = []
