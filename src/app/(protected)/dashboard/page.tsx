@@ -29,16 +29,22 @@ async function fetchDashboardData() {
       apiFetch('/users?page=1&limit=9999'),
     ])
 
-    // Extract .data if paginated, otherwise use directly
-    const servantees = Array.isArray(servanteesRes.data)
-      ? servanteesRes.data
-      : servanteesRes
-    const retreats = Array.isArray(retreatsRes.data)
-      ? retreatsRes.data
-      : retreatsRes
-    const users = Array.isArray(usersRes.data)
-      ? usersRes.data
-      : usersRes
+    // Extract .data if paginated, otherwise use directly (safe with unknown)
+    const servantees = Array.isArray((servanteesRes as any)?.data)
+      ? (servanteesRes as any).data
+      : Array.isArray(servanteesRes)
+      ? (servanteesRes as any)
+      : []
+    const retreats = Array.isArray((retreatsRes as any)?.data)
+      ? (retreatsRes as any).data
+      : Array.isArray(retreatsRes)
+      ? (retreatsRes as any)
+      : []
+    const users = Array.isArray((usersRes as any)?.data)
+      ? (usersRes as any).data
+      : Array.isArray(usersRes)
+      ? (usersRes as any)
+      : []
 
     // Count upcoming retreats
     const now = new Date()
