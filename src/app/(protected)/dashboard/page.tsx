@@ -145,8 +145,15 @@ async function fetchDashboardData() {
               ابدأ بإضافة مخدومين أو تنظيم خلوة جديدة.
             </p>
           </div>
-          <Button onClick={() => router.push('dashboard/servantees')}>إضافة مخدوم</Button>
-                    <Button onClick={() => router.push('dashboard/retreats')}>إضافة خلوة</Button>
+          <div className="flex gap-2">
+  <Button onClick={() => router.push('dashboard/servantees')}>
+    إضافة مخدوم
+  </Button>
+  <Button onClick={() => router.push('dashboard/retreats')}>
+    إضافة خلوة
+  </Button>
+</div>
+
         </Card>
       </section>
     </div>
