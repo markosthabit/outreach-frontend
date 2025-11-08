@@ -1,4 +1,5 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 
 // ---- Internal state for refresh coordination ----
 let isRefreshing = false;

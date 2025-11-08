@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+        "copy-static": "node copy-static.js"
+
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

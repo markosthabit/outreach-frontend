@@ -22,6 +22,7 @@ import { ConfirmDeleteDialog } from '@/components/shared/delete-dialog'
 import ServanteeDetailsDialog from './servantee-details-dialog'
 import NotesButton from '@/components/shared/notes-button'
 import { useAuth } from '@/contexts/AuthContext'
+import { useDebounce } from '@/hooks/use-debounce'
 
 interface Servantee {
   _id: string
@@ -33,16 +34,6 @@ interface Servantee {
   birthDate: string
   isActive: boolean
   notes: string[]
-}
-
-// Debounce hook
-export function useDebounce<T>(value: T, delay = 500) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const handler = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(handler)
-  }, [value, delay])
-  return debounced
 }
 
 export default function ServanteesPage() {
