@@ -78,12 +78,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">كلمة السر</FieldLabel>
-                  <a
+                  {/* <a
                     href="#"
                     className="mr-auto text-sm underline-offset-2 hover:underline"
                   >
                     نسيت كلمة السر؟
-                  </a>
+                  </a> */}
                 </div>
                 <Input
                   id="password"
