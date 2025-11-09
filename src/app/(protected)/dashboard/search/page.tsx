@@ -8,11 +8,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { apiFetch } from '@/lib/api'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// Export libs
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import * as XLSX from 'xlsx'
 import { b64font } from '@/lib/fonts/amiri-font'
 
 interface Retreat {
@@ -34,6 +31,22 @@ function getAttendeeIds(retreat: Retreat): string[] {
   return (retreat.attendees as any[]).map(a => (typeof a === 'string' ? a : a._id))
 }
 
+async function fetchAllServantees(): Promise<Servantee[]> {
+  let page = 1
+  const limit = 100
+  let all: Servantee[] = []
+  let hasMore = true
+
+  while (hasMore) {
+    const res: any = await apiFetch(`/servantees?page=${page}&limit=${limit}`)
+    if (!res.data || res.data.length === 0) break
+    all = [...all, ...res.data]
+    hasMore = res.pages && page < res.pages
+    page++
+  }
+  return all
+}
+
 export default function SearchPage() {
   const [retreats, setRetreats] = useState<Retreat[]>([])
   const [servantees, setServantees] = useState<Servantee[]>([])
@@ -41,13 +54,15 @@ export default function SearchPage() {
   const [endRetreatId, setEndRetreatId] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'attended' | 'notAttended'>('attended')
   const [filtered, setFiltered] = useState<Servantee[]>([])
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
   const [loadingPdf, setLoadingPdf] = useState(false)
   const [loadingExcel, setLoadingExcel] = useState(false)
 
   useEffect(() => {
     fetchRetreats()
-    fetchServantees()
+    fetchAllServantees().then(setServantees)
   }, [])
 
   async function fetchRetreats() {
@@ -56,14 +71,10 @@ export default function SearchPage() {
     setRetreats(sorted)
   }
 
-  async function fetchServantees() {
-    const res: any = await apiFetch('/servantees')
-    setServantees(res.data)
-  }
-
   function handleSearch() {
     if (!startRetreatId || !endRetreatId) {
       setFiltered([])
+      setPage(1)
       return
     }
 
@@ -72,6 +83,7 @@ export default function SearchPage() {
 
     if (startIndex === -1 || endIndex === -1) {
       setFiltered([])
+      setPage(1)
       return
     }
 
@@ -87,7 +99,11 @@ export default function SearchPage() {
         : servantees.filter(s => !allAttendeeIds.has(s._id))
 
     setFiltered(result)
+    setPage(1)
   }
+
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+  const totalPages = Math.ceil(filtered.length / pageSize)
 
   const handleExportPDF = async () => {
     try {
@@ -98,6 +114,12 @@ export default function SearchPage() {
 
       setLoadingPdf(true)
 
+      const [{ default: jsPDF }, { default: autoTable, applyPlugin }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable')
+      ])
+      applyPlugin(jsPDF)
+
       const doc = new jsPDF({ orientation: "p", unit: "pt" })
       doc.addFileToVFS("Amiri-Regular.ttf", b64font)
       doc.addFont("Amiri-Regular.ttf", "Amiri", "normal")
@@ -106,9 +128,9 @@ export default function SearchPage() {
 
       doc.text("نتائج البحث عن المخدومين", 540, 40, { align: "right" })
 
-      const rows = filtered.map(s => [ s.phone, s.name])
+      const rows = filtered.map(s => [s.phone, s.name])
 
-      autoTable(doc, {
+      ;(doc as any).autoTable({
         body: rows,
         styles: { font: "Amiri", halign: "right" },
         margin: { right: 40, left: 40 },
@@ -124,7 +146,7 @@ export default function SearchPage() {
     }
   }
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       if (filtered.length === 0) {
         toast.info("لا يوجد بيانات للتصدير")
@@ -132,6 +154,8 @@ export default function SearchPage() {
       }
 
       setLoadingExcel(true)
+
+      const XLSX = await import('xlsx')
 
       const data = filtered.map(s => ({
         الموبايل: s.phone,
@@ -211,16 +235,16 @@ export default function SearchPage() {
       <Card className="p-4 shadow-sm overflow-x-auto">
         <Table className="min-w-full text-right">
           <TableCaption>
-            {filtered.length === 0 ? 'لا يوجد نتائج' : `عدد النتائج: ${filtered.length}`}
+            {filtered.length === 0 ? 'لا يوجد نتائج' : `عرض ${paginated.length} من ${filtered.length} (صفحة ${page}/${totalPages})`}
           </TableCaption>
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className='text-right'>الاسم</TableHead>
-              <TableHead className='text-right' >الموبايل</TableHead>
+              <TableHead className='text-right'>الموبايل</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map(s => (
+            {paginated.map(s => (
               <TableRow key={s._id}>
                 <TableCell>{s.name}</TableCell>
                 <TableCell>{s.phone}</TableCell>
@@ -229,6 +253,28 @@ export default function SearchPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">صفحة {page} من {totalPages}</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
