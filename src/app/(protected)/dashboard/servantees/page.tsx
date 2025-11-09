@@ -31,7 +31,7 @@ interface Servantee {
   church: string
   education: string
   work: string
-  birthDate: string
+  year: string
   isActive: boolean
   notes: string[]
 }
@@ -158,7 +158,6 @@ const [totalResults, setTotalResults] = useState(0)
               <TableHead className="text-right">الكنيسة</TableHead>
               <TableHead className="text-right">الكلية</TableHead>
               <TableHead className="text-right">الفرقة</TableHead>
-              <TableHead className="text-right">تاريخ الميلاد</TableHead>
               <TableHead className="text-right w-[100px]">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
@@ -170,9 +169,8 @@ const [totalResults, setTotalResults] = useState(0)
                 <TableCell>{s.phone || '-'}</TableCell>
                 <TableCell>{s.church || '-'}</TableCell>
                 <TableCell>{s.education || '-'}</TableCell>
-                <TableCell>{s.work || '-'}</TableCell>
                 <TableCell>
-                  {s.birthDate ? format(new Date(s.birthDate), 'yyyy-MM-dd') : '-'}
+                  {s.year }
                 </TableCell>
 
                 <TableCell className="flex gap-2 justify-end">
