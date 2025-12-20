@@ -7,7 +7,6 @@ export default function LoginPage() {
       <div className="w-full max-w-sm md:max-w-4xl">
         <LoginForm />
       </div>
-      <Toaster />
     </div>
   );
 }

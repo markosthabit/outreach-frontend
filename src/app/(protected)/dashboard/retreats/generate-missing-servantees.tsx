@@ -115,7 +115,7 @@ export default function GenerateMissingServantees({ retreatId, retreatName }: Pr
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col gap-2">
       <Button onClick={handleGeneratePDF} disabled={loadingPdf}>
         {loadingPdf ? "جارٍ إنشاء PDF..." : "تصدير غير المشاركين PDF"}
       </Button>

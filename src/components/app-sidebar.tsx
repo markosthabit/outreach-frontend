@@ -135,7 +135,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { user } = useAuth();
       data.user.name = user?.role ?? data.user.name;
-      data.user.email = user?.email ?? data.user.email;
+  data.user.email = user?.email ?? data.user.email;
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

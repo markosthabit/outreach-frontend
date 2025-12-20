@@ -97,6 +97,7 @@ export default function ServantsPage() {
             <TableRow className="bg-muted/50">
               <TableHead className='text-right'>الإسم</TableHead>
               <TableHead className='text-right'>البريد الإلكتروني</TableHead>
+
               <TableHead className='text-right'>الدور</TableHead>
               <TableHead className="w-[160px] text-center">الإجراءات</TableHead>
             </TableRow>
@@ -116,7 +117,8 @@ export default function ServantsPage() {
                   <EntityDialog
                     title="تعديل بيانات الخادم"
                     endpoint="users"
-                    fields={servantFields.filter(f => f.name !== 'password')} // don't edit password here
+                    // fields={servantFields.filter(f => f.name !== 'password')} // don't edit password here
+                    fields={servantFields} // allow editing passwords
                     mode="edit"
                     initialData={s}
                     onSuccess={fetchServants}

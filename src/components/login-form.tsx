@@ -41,10 +41,11 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
       // Store token securely (localStorage for now)
       localStorage.setItem("access_token", res.access_token);
-
+       toast.success("تم تسجيل الدخول بنجاح!");
       router.push("/dashboard"); // redirect to dashboard
     } catch (error: any) {
       console.error(error);
+      toast.error("فشل تسجيل الدخول. تأكد من البيانات.");
     }
   };
 
@@ -78,12 +79,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">كلمة السر</FieldLabel>
-                  {/* <a
-                    href="#"
-                    className="mr-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    نسيت كلمة السر؟
-                  </a> */}
+                  
                 </div>
                 <Input
                   id="password"

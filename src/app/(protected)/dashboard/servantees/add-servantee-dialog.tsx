@@ -22,9 +22,7 @@ const servanteeSchema = z.object({
   phone: z.string().optional(),
   church: z.string().optional(),
   education: z.string().optional(),
-  work: z.string().optional(),
-  birthDate: z.string().optional(),
-  notes: z.string().optional(), // for now a single text area
+  year: z.string().optional(),
 })
 
 type ServanteeFormData = z.infer<typeof servanteeSchema>
@@ -35,7 +33,7 @@ export function AddServanteeDialog({ onAdded }: { onAdded: () => void }) {
 
   const form = useForm<ServanteeFormData>({
     resolver: zodResolver(servanteeSchema),
-    defaultValues: { name: '', phone: '', church: '', education: '', work: '', birthDate: '', notes: '' },
+    defaultValues: { name: '', phone: '', church: '', education: '', year: '' },
   })
 
 const onSubmit = async (values: ServanteeFormData) => {
@@ -44,7 +42,6 @@ const onSubmit = async (values: ServanteeFormData) => {
 
     const payload = {
       ...values,
-      notes: values.notes ? [values.notes] : [],
     }
 
     await apiFetch('/servantees', {
@@ -134,19 +131,12 @@ const onSubmit = async (values: ServanteeFormData) => {
           </div>
 
           <div>
-            <Label>العمل</Label>
-            <Input className="mt-2" {...form.register('work')} />
+            <Label>الفرقة</Label>
+            <Input className="mt-2" {...form.register('year')} />
           </div>
 
-          <div>
-            <Label>تاريخ الميلاد</Label>
-            <Input className="mt-2" type="date" {...form.register('birthDate')} />
-          </div>
 
-          <div>
-            <Label>ملاحظات</Label>
-            <Textarea className='mt-2' rows={2} {...form.register('notes')} />
-          </div>
+
 
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'جاري الحفظ...' : 'إضافة'}

@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 import { Pencil } from 'lucide-react'
 import NotesButton from '@/components/shared/notes-button'
 import GenerateMissingServantees from './generate-missing-servantees'
-
+import { GenerateAttendeesReport } from './generate-attendees-report'
 // ---------- Types ----------
 type Servantee = {
   _id: string
@@ -46,12 +46,9 @@ const retreatFields= [
   { name: 'location', label: 'مكان الخلوة', required: true },
   { name: 'startDate', label: 'تاريخ البداية', type: 'date', required: true },
   { name: 'endDate', label: 'تاريخ النهاية', type: 'date', required: true },
-
-  // TODO: Notes =>
-    //   { name: 'notes', label: 'ملاحظات', type: 'textarea' },
 ]
 
-// ---------- AttendeePicker (same as before) ----------
+// ---------- AttendeePicker ----------
 function AttendeePicker({ retreatId, onAdded }: { retreatId: string; onAdded: () => void }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Servantee[]>([])
@@ -143,6 +140,28 @@ function FocusedRetreatCard({
   retreat: Retreat
   onRemoveAttendee: (servanteeId: string) => void
 }) {
+  const [attendeePage, setAttendeePage] = useState(1)
+  const attendeeLimit = 10
+
+  const attendees = useMemo(() => {
+    const arr = (retreat.attendees || []) as any[]
+    return arr.map(a => ({
+      id: typeof a === 'string' ? a : a._id,
+      name: typeof a === 'string' ? a : a.name || 'غير معروف',
+      phone: typeof a === 'string' ? '-' : a.phone || '-',
+    }))
+  }, [retreat.attendees])
+
+  const paginated = attendees.slice((attendeePage - 1) * attendeeLimit, attendeePage * attendeeLimit)
+  const totalAttendeePages = Math.ceil(attendees.length / attendeeLimit)
+useEffect(() => {
+  const maxPage = Math.ceil(attendees.length / attendeeLimit) || 1
+  setAttendeePage(prev => prev > maxPage ? maxPage : prev)
+}, [retreat._id, attendees.length])
+  useEffect(() => {
+    setAttendeePage(1)
+  }, [retreat._id])
+
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-4">
@@ -163,7 +182,7 @@ function FocusedRetreatCard({
       </div>
 
       <div className="mt-4">
-        <h3 className="font-medium mb-2">المشاركين</h3>
+        <h3 className="font-medium mb-2">المشاركين ({attendees.length})</h3>
         <Card className="p-2">
           <Table>
             <TableHeader>
@@ -174,34 +193,52 @@ function FocusedRetreatCard({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(retreat.attendees || []).length === 0 && (
+              {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3}>لا يوجد مشاركين</TableCell>
                 </TableRow>
-              )}
-                          {(retreat.attendees || []).map((a: any) => {
-                              console.log(a);
-                const id = typeof a === 'string' ? a : a._id
-                const name = typeof a === 'string' ? id : a.name
-                const phone = typeof a === 'string' ? '-' : a.phone
-                return (
-                  <TableRow key={id}>
-                    <TableCell>{name}</TableCell>
-                    <TableCell>{phone || '-'}</TableCell>
+              ) : (
+                paginated.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell>{a.name}</TableCell>
+                    <TableCell>{a.phone}</TableCell>
                     <TableCell className="flex gap-2 justify-end">
-                    <NotesButton entityId={id} entityType="servantee" />  
-                    <ConfirmDeleteDialog
-                          onConfirm={() => onRemoveAttendee(id)}
-                          title="حذف مخدوم"
-                          description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم من الخلوة؟"
-                          triggerLabel="حذف"
-                        />
+                      <NotesButton entityId={a.id} entityType="servantee" />
+                      <ConfirmDeleteDialog
+                        onConfirm={() => onRemoveAttendee(a.id)}
+                        title="حذف مخدوم"
+                        description="هل أنت متأكد أنك ترغب في حذف هذا المخدوم من الخلوة؟"
+                        triggerLabel="حذف"
+                      />
                     </TableCell>
                   </TableRow>
-                )
-              })}
+                ))
+              )}
             </TableBody>
           </Table>
+          {totalAttendeePages > 1 && (
+            <div className="flex justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={attendeePage <= 1}
+                onClick={() => setAttendeePage(p => p - 1)}
+              >
+                السابق
+              </Button>
+              <span className="text-sm self-center">
+                صفحة {attendeePage} من {totalAttendeePages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={attendeePage >= totalAttendeePages}
+                onClick={() => setAttendeePage(p => p + 1)}
+              >
+                التالي
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     </Card>
@@ -210,7 +247,6 @@ function FocusedRetreatCard({
 
 // ---------- RetreatsPage (Main) ----------
 export default function RetreatsPage() {
-  // 🧭 PAGINATION
   const [page, setPage] = useState(1)
   const [limit] = useState(10)
   const [total, setTotal] = useState(0)
@@ -278,88 +314,85 @@ export default function RetreatsPage() {
 
       <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="ابحث عن خلوة..." />
 
-   <Card className="p-4 shadow-sm overflow-x-auto">
-  <Table className="w-full border-separate border-spacing-0 text-right">
-    <TableCaption className="text-sm text-muted-foreground">
-      {retreats.length === 0 && !loading
-        ? 'لا يوجد خلوات'
-        : `الصفحة ${page} من ${totalPages}`}
-    </TableCaption>
+      <Card className="p-4 shadow-sm overflow-x-auto">
+        <Table className="w-full border-separate border-spacing-0 text-right">
+          <TableCaption className="text-sm text-muted-foreground">
+            {retreats.length === 0 && !loading
+              ? 'لا يوجد خلوات'
+              : `الصفحة ${page} من ${totalPages}`}
+          </TableCaption>
 
-    <TableHeader>
-      <TableRow className="bg-muted/50 text-right">
-        <TableHead className="text-right font-semibold">الاسم</TableHead>
-          <TableHead className="text-right font-semibold">المكان</TableHead>
-          <TableHead className="text-right font-semibold">البداية</TableHead>
-          <TableHead className="text-right font-semibold">النهاية</TableHead>
-          <TableHead className="text-right font-semibold">المشاركين</TableHead>
-          <TableHead className="text-right font-semibold w-[140px]">الإجراءات</TableHead>
-      </TableRow>
-    </TableHeader>
+          <TableHeader>
+            <TableRow className="bg-muted/50 text-right">
+              <TableHead className="text-right font-semibold">الاسم</TableHead>
+              <TableHead className="text-right font-semibold">المكان</TableHead>
+              <TableHead className="text-right font-semibold">البداية</TableHead>
+              <TableHead className="text-right font-semibold">النهاية</TableHead>
+              <TableHead className="text-right font-semibold">المشاركين</TableHead>
+              <TableHead className="text-right font-semibold w-[140px]">الإجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
 
-    <TableBody>
-      {retreats.map((r) => (
-        <TableRow
-          key={r._id}
-          onClick={() => setSelectedRetreat(r)}
-          className={`cursor-pointer transition-colors ${
-            selectedRetreat?._id === r._id ? 'bg-muted/30' : 'hover:bg-muted/10'
-          }`}
-        >
-          <TableCell className="py-3">{r.name}</TableCell>
-                  <TableCell className="py-3">{r.location}</TableCell>
-          <TableCell className="py-3">
-            {r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : '-'}
-          </TableCell>
-          <TableCell className="py-3">
-            {r.endDate ? format(new Date(r.endDate), 'yyyy-MM-dd') : '-'}
-          </TableCell>
-          <TableCell className="py-3">
-            {(r.attendees && (r.attendees as any[]).length) || 0}
-          </TableCell>
-          <TableCell className="py-3">
-            <div className="flex items-center justify-end gap-2">
-              <EntityDialog
-                title="تعديل خلوة"
-                endpoint="retreats"
-                fields={retreatFields}
-                mode="edit"
-                initialData={r}
-                onSuccess={fetchRetreats}
-                trigger={
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                }
-              />
+          <TableBody>
+            {retreats.map((r) => (
+              <TableRow
+                key={r._id}
+                onClick={() => setSelectedRetreat(r)}
+                className={`cursor-pointer transition-colors ${
+                  selectedRetreat?._id === r._id ? 'bg-muted/30' : 'hover:bg-muted/10'
+                }`}
+              >
+                <TableCell className="py-3">{r.name}</TableCell>
+                <TableCell className="py-3">{r.location}</TableCell>
+                <TableCell className="py-3">
+                  {r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : '-'}
+                </TableCell>
+                <TableCell className="py-3">
+                  {r.endDate ? format(new Date(r.endDate), 'yyyy-MM-dd') : '-'}
+                </TableCell>
+                <TableCell className="py-3">
+                  {(r.attendees && (r.attendees as any[]).length) || 0}
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    <EntityDialog
+                      title="تعديل خلوة"
+                      endpoint="retreats"
+                      fields={retreatFields}
+                      mode="edit"
+                      initialData={r}
+                      onSuccess={fetchRetreats}
+                      trigger={
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      }
+                    />
                     <NotesButton entityId={r._id} entityType="retreat" />  
 
-         <ConfirmDeleteDialog
-  title="حذف الخلوة"
-  description={`هل أنت متأكد أنك ترغب في حذف الخلوة "${r.name}"؟`}
-  onConfirm={async () => {
-    try {
-      await apiFetch(`/retreats/${r._id}`, { method: 'DELETE' })
-      toast.success('تم حذف الخلوة بنجاح')
-      fetchRetreats()
-      if (selectedRetreat?._id === r._id) setSelectedRetreat(null)
-    } catch (err) {
-      console.error(err)
-      toast.error('حدث خطأ أثناء حذف الخلوة')
-    }
-  }}
-/>
+                    <ConfirmDeleteDialog
+                      title="حذف الخلوة"
+                      description={`هل أنت متأكد أنك ترغب في حذف الخلوة "${r.name}"؟`}
+                      onConfirm={async () => {
+                        try {
+                          await apiFetch(`/retreats/${r._id}`, { method: 'DELETE' })
+                          toast.success('تم حذف الخلوة بنجاح')
+                          fetchRetreats()
+                          if (selectedRetreat?._id === r._id) setSelectedRetreat(null)
+                        } catch (err) {
+                          console.error(err)
+                          toast.error('حدث خطأ أثناء حذف الخلوة')
+                        }
+                      }}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
 
-            </div>
-          </TableCell>
-        </TableRow>
-      ))}
-    </TableBody>
-  </Table>
-</Card>
-
-
-      {/* 🧭 PAGINATION CONTROLS */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2">
           <Button
@@ -397,15 +430,15 @@ export default function RetreatsPage() {
               }}
             />
             <div className="flex gap-2">
-              <Button onClick={() => refreshFocused()}>تحديث</Button>
               <Button variant="outline" onClick={() => setSelectedRetreat(null)}>
                 إلغاء التحديد
               </Button>
+              <GenerateAttendeesReport retreat={selectedRetreat} />
+
               <GenerateMissingServantees
                 retreatId={selectedRetreat._id}
-                retreatName={selectedRetreat.name}>
-
-              </GenerateMissingServantees>
+                retreatName={selectedRetreat.name}
+              />
             </div>
           </div>
         </div>

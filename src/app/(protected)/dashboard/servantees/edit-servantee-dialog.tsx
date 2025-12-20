@@ -24,9 +24,7 @@ const servanteeSchema = z.object({
   phone: z.string().optional(),
   church: z.string().optional(),
   education: z.string().optional(),
-  work: z.string().optional(),
-  birthDate: z.string().optional(),
-  notes: z.string().optional(),
+  year: z.string().optional(),
 })
 
 type ServanteeFormData = z.infer<typeof servanteeSchema>
@@ -48,9 +46,7 @@ export function EditServanteeDialog({
       phone: servantee.phone,
       church: servantee.church,
       education: servantee.education,
-      work: servantee.work,
-      birthDate: servantee.birthDate?.split('T')[0],
-      notes: servantee.notes?.join(', ') || '',
+      year: servantee.year,
     },
   })
 
@@ -58,8 +54,7 @@ export function EditServanteeDialog({
     try {
       setLoading(true)
       const payload = {
-        ...values,
-        notes: values.notes ? [values.notes] : [],
+        ...values
       }
 
       await apiFetch(`/servantees/${servantee._id}`, {
@@ -92,16 +87,14 @@ export function EditServanteeDialog({
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-8">
-          {['name', 'phone', 'church', 'education', 'work', 'birthDate', 'notes'].map((key) => (
+          {['name', 'phone', 'church', 'education', 'year'].map((key) => (
             <div key={key}>
               <Label>{{
                 name: 'الإسم',
                 phone: 'التليفون',
                 church: 'الكنيسة',
                 education: 'الدراسة',
-                work: 'العمل',
-                birthDate: 'تاريخ الميلاد',
-                notes: 'ملاحظات',
+                year: 'العمل',
               }[key]}</Label>
               {key === 'notes' ? (
                 <Textarea className="mt-2" rows={2} {...form.register(key as any)} />

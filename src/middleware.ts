@@ -21,22 +21,22 @@ export async function middleware(request: NextRequest) {
 
   // 3️⃣ Role-based restriction (only for admin routes)
   // Adjust this array if you want to protect more routes later
-  const adminOnlyRoutes = ['/dashboard/servants']
+  // const adminOnlyRoutes = ['/dashboard/servants']
 
-  if (token && adminOnlyRoutes.some((route) => pathname.startsWith(route))) {
-    try {
-      // Decode JWT (no verification needed for middleware)
-      const decoded: any = jwt.decode(token)
+  // if (token && adminOnlyRoutes.some((route) => pathname.startsWith(route))) {
+  //   try {
+  //     // Decode JWT (no verification needed for middleware)
+  //     const decoded: any = jwt.decode(token)
 
-      // If role is not ADMIN → redirect to dashboard
-      if (!decoded || decoded.role !== 'Admin') {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
+  //     // If role is not ADMIN → redirect to dashboard
+  //     if (!decoded || decoded.role !== 'Admin') {
+  //       return NextResponse.redirect(new URL('/dashboard', request.url))
+  //     }
+  //   } catch (error) {
+  //     console.error('Error decoding token:', error)
+  //     return NextResponse.redirect(new URL('/login', request.url))
+  //   }
+  // }
 
   return NextResponse.next()
 }
