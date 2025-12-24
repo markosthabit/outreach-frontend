@@ -71,36 +71,55 @@ export default function SearchPage() {
     setRetreats(sorted)
   }
 
-  function handleSearch() {
-    if (!startRetreatId || !endRetreatId) {
-      setFiltered([])
-      setPage(1)
-      return
-    }
-
-    const startIndex = retreats.findIndex(r => r._id === startRetreatId)
-    const endIndex = retreats.findIndex(r => r._id === endRetreatId)
-
-    if (startIndex === -1 || endIndex === -1) {
-      setFiltered([])
-      setPage(1)
-      return
-    }
-
-    const [from, to] = startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex]
-    const range = retreats.slice(from, to + 1)
-
-    const allAttendeeIds = new Set<string>()
-    range.forEach(r => getAttendeeIds(r).forEach(id => allAttendeeIds.add(id)))
-
-    const result =
-      filterType === 'attended'
-        ? servantees.filter(s => allAttendeeIds.has(s._id))
-        : servantees.filter(s => !allAttendeeIds.has(s._id))
-
-    setFiltered(result)
+ function handleSearch() {
+  if (!startRetreatId || !endRetreatId) {
+    setFiltered([])
     setPage(1)
+    return
   }
+
+  const startRetreat = retreats.find(r => r._id === startRetreatId)
+  const endRetreat   = retreats.find(r => r._id === endRetreatId)
+
+  if (!startRetreat || !endRetreat) {
+    setFiltered([])
+    setPage(1)
+    return
+  }
+
+  const fromDate = new Date(
+    Math.min(
+      new Date(startRetreat.startDate).getTime(),
+      new Date(endRetreat.startDate).getTime()
+    )
+  )
+
+  const toDate = new Date(
+    Math.max(
+      new Date(startRetreat.endDate).getTime(),
+      new Date(endRetreat.endDate).getTime()
+    )
+  )
+
+  const range = retreats.filter(r => {
+    const rStart = new Date(r.startDate)
+    const rEnd   = new Date(r.endDate)
+
+    return rStart <= toDate && rEnd >= fromDate
+  })
+
+  const allAttendeeIds = new Set<string>()
+  range.forEach(r => getAttendeeIds(r).forEach(id => allAttendeeIds.add(id)))
+
+  const result =
+    filterType === 'attended'
+      ? servantees.filter(s => allAttendeeIds.has(s._id))
+      : servantees.filter(s => !allAttendeeIds.has(s._id))
+
+  setFiltered(result)
+  setPage(1)
+}
+
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
   const totalPages = Math.ceil(filtered.length / pageSize)
